@@ -47,6 +47,7 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
 
   const monthYear = format(currentDate, 'yyyy-MM');
   const dateStr = format(currentDate, 'yyyy-MM-dd');
+  const [lastDate, setLastDate] = useState(dateStr);
 
   useEffect(() => {
     // Listen to logs for the current user and month
@@ -80,24 +81,24 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
     return () => unsubscribe();
   }, [employee.id, monthYear]);
 
-  // Update selection ONLY when date changes or when new data arrives IF NOT DIRTY
+  // Load entry/exit times whenever we change the selected date, or when database value updates (if we are not actively editing)
   useEffect(() => {
     const log = logs[dateStr];
-    if (!isDirty) {
-      if (log) {
-        setEntryTime(log.entryTime);
-        setExitTime(log.exitTime);
-      } else {
-        setEntryTime('');
-        setExitTime('');
+    
+    if (dateStr !== lastDate) {
+      // The user switched days. Reset editing state and load the new day's values.
+      setEntryTime(log ? log.entryTime : '');
+      setExitTime(log ? log.exitTime : '');
+      setIsDirty(false);
+      setLastDate(dateStr);
+    } else {
+      // Same day. Only update if the user is not actively editing
+      if (!isDirty) {
+        setEntryTime(log ? log.entryTime : '');
+        setExitTime(log ? log.exitTime : '');
       }
     }
-  }, [dateStr, logs, isDirty]);
-
-  // Reset dirty flag when date changes
-  useEffect(() => {
-    setIsDirty(false);
-  }, [dateStr]);
+  }, [dateStr, logs, isDirty, lastDate]);
 
   const calculateHours = (entry: string, exit: string) => {
     if (!entry || !exit) return 0;
