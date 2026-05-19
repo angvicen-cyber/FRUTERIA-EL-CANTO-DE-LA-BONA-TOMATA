@@ -1,0 +1,9 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Body of the tomato -->
+  <circle cx="256" cy="280" r="180" fill="#E23A2B"/>
+  <!-- Shine effect -->
+  <path d="M360 200C380 230 380 280 360 310" stroke="white" stroke-width="20" stroke-linecap="round" opacity="0.3"/>
+  <!-- Stem/Top -->
+  <path d="M256 120C260 140 265 170 256 200" stroke="#2D5A27" stroke-width="24" stroke-linecap="round"/>
+  <path d="M256 180L200 140L230 180L160 180L230 200L180 240L256 210L332 240L282 200L352 180L282 180L312 140L256 180Z" fill="#2D5A27"/>
+</svg>

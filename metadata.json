@@ -1,0 +1,8 @@
+{
+  "name": "El Cantó de la Bona Tomata",
+  "description": "App de control de horarios para los empleados de la Frutería el Cantó de la Bona Tomata con gestión de administrador y exportación a PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

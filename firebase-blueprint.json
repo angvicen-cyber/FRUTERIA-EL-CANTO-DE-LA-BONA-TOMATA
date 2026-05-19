@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents an employee or administrator.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "employee"] },
+        "password": { "type": "string", "description": "Admin password." }
+      },
+      "required": ["name", "role"]
+    },
+    "TimeLog": {
+      "title": "Time Log",
+      "description": "A daily work log for an employee.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "entryTime": { "type": "string" },
+        "exitTime": { "type": "string" },
+        "totalHours": { "type": "number" },
+        "isHoliday": { "type": "boolean" },
+        "monthYear": { "type": "string", "description": "Format: YYYY-MM" }
+      },
+      "required": ["userId", "date", "entryTime", "exitTime", "totalHours", "monthYear"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles stored by their ID (which could be their name in this simple app)."
+    },
+    "timeLogs/{logId}": {
+      "schema": "TimeLog",
+      "description": "Time logs for all users."
+    }
+  }
+}

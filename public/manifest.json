@@ -1,0 +1,21 @@
+{
+  "short_name": "La Bona Tomata",
+  "name": "El Cantó de la Bona Tomata",
+  "icons": [
+    {
+      "src": "/logo_tomate.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/logo_tomate.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#E23A2B",
+  "background_color": "#ffffff"
+}
