@@ -180,7 +180,9 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
     }
   };
 
-  const totalMonthlyHours = Object.values(logs).reduce((acc: number, log: TimeLog) => acc + log.totalHours, 0);
+  const totalMonthlyHours = Object.values(logs)
+    .filter((log: TimeLog) => log.monthYear === monthYear)
+    .reduce((acc: number, log: TimeLog) => acc + log.totalHours, 0);
 
   const prevDay = () => {
     const d = new Date(currentDate);
