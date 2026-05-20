@@ -67,10 +67,11 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 const EMPLOYEES: Employee[] = [
   { id: 'ana', name: 'Ana Vicent Valero', role: 'admin', email: 'anavicentvalero@gmail.com' },
   { id: 'angel', name: 'Angel Vicen Roca', role: 'employee', email: 'angvicen@gmail.com' },
-  { id: 'mariluz', name: 'MariLuz', role: 'employee' },
-  { id: 'marta', name: 'Marta', role: 'employee' },
-  { id: 'eva', name: 'Eva', role: 'employee' },
-  { id: 'pablo', name: 'Pablo', role: 'employee' },
+  { id: 'mariluz', name: 'Mª Luz Ballesteros Ferrer', role: 'employee' },
+  { id: 'marta', name: 'Marta Diaz Llovera', role: 'employee' },
+  { id: 'eva', name: 'Eva Mª Mocholí Vicent', role: 'employee' },
+  { id: 'pablo', name: 'Pablo David Scalzo', role: 'employee' },
+  { id: 'belkabli', name: 'Belkabli Keliel Bengabbou', role: 'employee' },
 ];
 
 export default function App() {

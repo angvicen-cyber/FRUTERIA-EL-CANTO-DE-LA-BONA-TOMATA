@@ -23,7 +23,8 @@
         "exitTime": { "type": "string" },
         "totalHours": { "type": "number" },
         "isHoliday": { "type": "boolean" },
-        "monthYear": { "type": "string", "description": "Format: YYYY-MM" }
+        "monthYear": { "type": "string", "description": "Format: YYYY-MM" },
+        "observations": { "type": "string", "description": "Optional comments or reason for modified work day." }
       },
       "required": ["userId", "date", "entryTime", "exitTime", "totalHours", "monthYear"]
     }

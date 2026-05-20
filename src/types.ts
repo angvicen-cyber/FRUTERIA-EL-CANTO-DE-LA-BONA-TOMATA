@@ -14,4 +14,5 @@ export interface TimeLog {
   totalHours: number;
   isHoliday: boolean;
   monthYear: string;
+  observations?: string;
 }

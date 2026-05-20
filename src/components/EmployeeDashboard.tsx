@@ -13,7 +13,7 @@ interface EmployeeDashboardProps {
   onLogout: () => void;
 }
 
-const ENTRY_OPTIONS = ['07:30', '08:00', '08:30', '09:00', '09:30', '10:00'];
+const ENTRY_OPTIONS = ['07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00'];
 const EXIT_OPTIONS = ['13:30', '14:00', '14:30', '15:00', '15:30'];
 
 export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashboardProps) {
@@ -39,6 +39,9 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
 
   const [entryTime, setEntryTime] = useState('');
   const [exitTime, setExitTime] = useState('');
+  const [observations, setObservations] = useState('');
+  const [isObsModalOpen, setIsObsModalOpen] = useState(false);
+  const [tempObservations, setTempObservations] = useState('');
   const [isDirty, setIsDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -89,16 +92,19 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
       // The user switched days. Reset editing state and load the new day's values.
       setEntryTime(log ? log.entryTime : '');
       setExitTime(log ? log.exitTime : '');
+      setObservations(log && log.observations ? log.observations : '');
       setIsDirty(false);
       setLastDate(dateStr);
     } else {
-      // Same day. Only update if the user is not actively editing
+      // Same day. Only update if the user has not edited the selection yet.
+      // This prevents background database updates from overwriting the user's active choices while clicking.
       if (!isDirty) {
         setEntryTime(log ? log.entryTime : '');
         setExitTime(log ? log.exitTime : '');
+        setObservations(log && log.observations ? log.observations : '');
       }
     }
-  }, [dateStr, logs, isDirty, lastDate]);
+  }, [dateStr, logs, lastDate]);
 
   const calculateHours = (entry: string, exit: string) => {
     if (!entry || !exit) return 0;
@@ -113,6 +119,7 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
     setSaving(true);
     const totalHours = calculateHours(entryTime, exitTime);
     const isHoliday = checkIsHoliday(currentDate);
+    const cleanObs = observations.trim();
     
     // Create the log object
     const logData: TimeLog = {
@@ -123,12 +130,13 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
       exitTime,
       totalHours,
       isHoliday,
-      monthYear
+      monthYear,
+      ...(cleanObs ? { observations: cleanObs } : {})
     };
 
     // OPTIMISTIC UPDATE: Update local state immediately
     setLogs(prev => {
-      if (!entryTime && !exitTime) {
+      if (!entryTime && !exitTime && !cleanObs) {
         const { [dateStr]: _, ...rest } = prev;
         return rest;
       }
@@ -136,7 +144,7 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
     });
 
     try {
-      if (!entryTime && !exitTime) {
+      if (!entryTime && !exitTime && !cleanObs) {
         await deleteDoc(doc(db, 'timeLogs', `${employee.id}_${dateStr}`));
       } else {
         await setDoc(doc(db, 'timeLogs', `${employee.id}_${dateStr}`), logData);
@@ -171,6 +179,7 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
       await deleteDoc(doc(db, 'timeLogs', `${employee.id}_${dateStr}`));
       setEntryTime('');
       setExitTime('');
+      setObservations('');
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
     } catch (error: any) {
@@ -373,27 +382,55 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
                 ))}
               </div>
             </div>
+
+            {/* Sección de Observaciones */}
+            <div className="flex flex-col gap-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider flex items-center gap-1">
+                  ✍️ Observaciones
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTempObservations(observations);
+                    setIsObsModalOpen(true);
+                  }}
+                  className="text-xs font-bold text-[#E23A2B] hover:scale-105 hover:underline transition-all"
+                >
+                  {observations ? 'Editar' : '+ Añadir'}
+                </button>
+              </div>
+              {observations ? (
+                <p className="text-sm font-medium text-slate-700 bg-white p-3 rounded-xl border border-slate-100 max-h-24 overflow-y-auto leading-relaxed">
+                  {observations}
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-400 font-medium">
+                  ¿Baja, enfermedad, retraso...? Agrégalo aquí si es necesario.
+                </p>
+              )}
+            </div>
           </div>
 
-            <div className="pt-4 mt-auto">
-              <div className="flex justify-between items-center mb-6 px-1">
-                <span className="text-slate-400 font-bold uppercase text-xs">Horas hoy</span>
-                <span className="text-2xl font-black text-slate-800">
-                  {calculateHours(entryTime, exitTime).toFixed(1)}h
-                </span>
-              </div>
-              
-              <button
-                onClick={handleSave}
-                disabled={saving || (entryTime !== "" && exitTime === "") || (entryTime === "" && exitTime !== "")}
-                className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${
-                  success 
-                    ? 'bg-green-500 text-white shadow-green-100' 
-                    : (entryTime !== "" && exitTime === "") || (entryTime === "" && exitTime !== "")
-                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                      : 'bg-[#E23A2B] text-white shadow-red-100 hover:scale-[1.02] active:scale-[0.98]'
-                }`}
-              >
+          <div className="pt-4 mt-auto">
+            <div className="flex justify-between items-center mb-6 px-1">
+              <span className="text-slate-400 font-bold uppercase text-xs">Horas hoy</span>
+              <span className="text-2xl font-black text-slate-800">
+                {calculateHours(entryTime, exitTime).toFixed(1)}h
+              </span>
+            </div>
+            
+            <button
+              onClick={handleSave}
+              disabled={saving || (entryTime !== "" && exitTime === "") || (entryTime === "" && exitTime !== "")}
+              className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${
+                success 
+                  ? 'bg-green-500 text-white shadow-green-100' 
+                  : (entryTime !== "" && exitTime === "") || (entryTime === "" && exitTime !== "")
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                    : 'bg-[#E23A2B] text-white shadow-red-100 hover:scale-[1.02] active:scale-[0.98]'
+              }`}
+            >
               {saving ? (
                 <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : success ? (
@@ -416,6 +453,86 @@ export default function EmployeeDashboard({ employee, onLogout }: EmployeeDashbo
       <footer className="p-6 text-center text-slate-300 text-[10px] font-bold uppercase tracking-widest">
         El Cantó de la Bona Tomata v1.0
       </footer>
+
+      {/* Modal de Observaciones */}
+      <AnimatePresence>
+        {isObsModalOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-sm border border-slate-100 flex flex-col gap-4"
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-black text-slate-800">Añadir Observación</h3>
+                <button 
+                  onClick={() => setIsObsModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 font-bold p-1 text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                Especifica cualquier motivo para documentar en el registro de hoy (baja, enfermedad, asunto personal, etc.):
+              </p>
+
+              {/* Botones rápidos */}
+              <div className="flex flex-wrap gap-1.5 py-1">
+                {['Baja Médica', 'Indisposición Enfermedad', 'Asunto Personal', 'Entrada Tarde', 'Ausencia'].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      setTempObservations(prev => {
+                        const trimmed = prev.trim();
+                        if (!trimmed) return tag;
+                        if (trimmed.includes(tag)) return prev;
+                        return `${trimmed} - ${tag}`;
+                      });
+                    }}
+                    className="text-[10px] font-bold px-2.5 py-1 bg-slate-100 hover:bg-[#E23A2B] hover:text-white text-slate-600 rounded-lg transition-all"
+                  >
+                    + {tag}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                value={tempObservations}
+                onChange={(e) => setTempObservations(e.target.value)}
+                placeholder="Escribe aquí las observaciones o comentarios..."
+                rows={4}
+                className="w-full text-sm p-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#E23A2B] focus:border-transparent text-slate-800 font-medium resize-none"
+              />
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTempObservations('');
+                  }}
+                  className="flex-1 py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl font-bold text-sm transition-all text-center"
+                >
+                  Limpiar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setObservations(tempObservations);
+                    setIsDirty(true);
+                    setIsObsModalOpen(false);
+                  }}
+                  className="flex-1 py-3 px-4 bg-[#E23A2B] hover:bg-[#c72f22] text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-red-100 text-center"
+                >
+                  Aceptar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
